@@ -1,0 +1,30 @@
+4 layers frontend
+
+=>UI
+component
+pages
+
+=>Hook - for managing state layer and api layer
+hooks  
+
+
+=>state - store data frontend level
+auth.context.jsx
+ai.context.jsx
+
+
+=>API -  frontend backend communication, backend-auth.routes.js
+   =>services
+        auth.api.jsx, frontend-auth-services
+
+
+client-
+ pdf format resume
+ self description
+ job description
+
+server-
+  technicalQuestions
+  behaviourquestions
+  skillGaps
+  prepPlan

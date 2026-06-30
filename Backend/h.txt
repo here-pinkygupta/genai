@@ -1,0 +1,13 @@
+bcrypt-it stores password into non readable ,fixed length charcters
+registration time - it salts& hashes the password then save it database
+login time- it checked type password aginst hashed password
+
+jwttoken - securely transmit information betwwen parties as compact, url-safe token
+
+header-
+payload-
+signature-
+cookie-parser : it is a middleware between browser cookies and server side devlopment
+
+multer-use for pdf to text
+pdf-parse - used for read the pdf then change pdf to text by multer
