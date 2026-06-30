@@ -7,7 +7,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(cors({
-    origin: 'https://congenial-couscous-97j677647p67f7p6j-5173.app.github.dev', // must match frontend exactly, no trailing slash
+    origin: process.env.CLIENT_URL, // must match frontend exactly, no trailing slash
     credentials: true
 }))
 
