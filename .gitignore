@@ -13,10 +13,12 @@ dist-ssr
 *.local
 
 # Environment variables
+node_modules/
 .env
 .env.*
 Backend/.env
 Frontend/.env
+dist/
 
 # Editor directories and files
 .vscode/*
