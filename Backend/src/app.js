@@ -6,11 +6,23 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
-app.use(cors({
-    origin: process.env.CLIENT_URL, // must match frontend exactly, no trailing slash
-    credentials: true
-}))
 
+
+const allowedOrigins = [
+    "https://resume-analyzer-puce-eight.vercel.app",
+    "https://resume-analyzer-4s2muzf6j-here-pinkyguptas-projects.vercel.app",
+];
+
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true
+}));
 app.get("/test", (req, res) => {
     res.json({ message: "Backend is working" });
 });
