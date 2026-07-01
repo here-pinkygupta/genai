@@ -6,7 +6,8 @@ const app = express()
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://resume-analyzer-oqswykkcf-here-pinkyguptas-projects.vercel.app"
+  "https://resume-analyzer-oqswykkcf-here-pinkyguptas-projects.vercel.app",
+  "https://resume-analyzer-puce-eight.vercel.app"
 ];
 
 app.use(cors({

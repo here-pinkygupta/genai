@@ -6,7 +6,7 @@ import { InterviewProvider } from "./features/interview/interview.context.jsx"
 
 
 function App() {
-  
+  console.log("API URL:", import.meta.env.VITE_API_URL)
 
   return (
     <>
