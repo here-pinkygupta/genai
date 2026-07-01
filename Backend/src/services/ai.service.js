@@ -1,5 +1,5 @@
 const { GoogleGenAI } = require("@google/genai");
-const htmlPdf = require("html-pdf-node");
+const PDFDocument = require('pdfkit');
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
@@ -106,50 +106,73 @@ Instructions:
         }
     });
 
-    const parsed = JSON.parse(response.text);
-    return parsed;
-}
-
-// ── PDF generation using html-pdf-node (no Chrome needed) ────────────────────
-async function genratePdfFromHtml(htmlContent) {
-    const file = { content: htmlContent };
-    const options = {
-        format: "A4",
-        printBackground: true,
-        margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" }
-    };
-
-    const pdfBuffer = await htmlPdf.generatePdf(file, options);
-    return pdfBuffer;
+    return JSON.parse(response.text);
 }
 
 async function genrateResumePdf({ resume, selfDescription, jobDescription }) {
-    const resumePdfSchema = {
+    const resumeSchema = {
         type: "object",
         properties: {
-            html: {
-                type: "string",
-                description: "The HTML content of the resume which can be converted to PDF"
-            }
+            name:           { type: "string" },
+            email:          { type: "string" },
+            phone:          { type: "string" },
+            linkedin:       { type: "string" },
+            github:         { type: "string" },
+            summary:        { type: "string" },
+            skills:         { type: "array", items: { type: "string" } },
+            experience: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        company:      { type: "string" },
+                        role:         { type: "string" },
+                        duration:     { type: "string" },
+                        achievements: { type: "array", items: { type: "string" } }
+                    },
+                    required: ["company", "role", "duration", "achievements"]
+                }
+            },
+            education: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        institution: { type: "string" },
+                        degree:      { type: "string" },
+                        year:        { type: "string" }
+                    },
+                    required: ["institution", "degree", "year"]
+                }
+            },
+            projects: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        name:        { type: "string" },
+                        description: { type: "string" },
+                        tech:        { type: "string" }
+                    },
+                    required: ["name", "description", "tech"]
+                }
+            },
+            certifications: { type: "array", items: { type: "string" } }
         },
-        required: ["html"]
+        required: ["name", "email", "summary", "skills", "experience", "education", "projects"]
     };
 
-    const prompt = `Generate a resume for a candidate with the following details:
+    const prompt = `
+Extract and tailor resume data for this candidate based on the job description.
 Resume: ${resume}
 Self Description: ${selfDescription}
 Job Description: ${jobDescription}
 
-The response should be a JSON object with a single field "html" containing complete, self-contained HTML for the resume.
-
 Rules:
-- Include all CSS inline in a <style> tag inside the HTML
-- Use a clean, professional design with subtle colors
-- ATS-friendly: use standard section headings (Experience, Education, Skills, Projects)
-- Tailored to the job description — highlight relevant skills and experience
-- Max 2 pages when converted to PDF
-- Do NOT use external fonts or CDN links — use system fonts only (Arial, Georgia, sans-serif)
-- Do not make it sound AI-generated
+- Tailor the summary and experience bullet points to match the job description
+- Only include skills relevant to the job
+- Keep achievements concise and impact-focused
+- ATS friendly language
 `;
 
     const response = await ai.models.generateContent({
@@ -157,13 +180,109 @@ Rules:
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: resumePdfSchema,
+            responseSchema: resumeSchema,
         }
     });
 
-    const parsed = JSON.parse(response.text);
-    const pdfBuffer = await genratePdfFromHtml(parsed.html);
-    return pdfBuffer;
+    const data = JSON.parse(response.text);
+    return buildPdfWithPdfkit(data);
+}
+
+function buildPdfWithPdfkit(data) {
+    return new Promise((resolve, reject) => {
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        const chunks = [];
+
+        doc.on('data', chunk => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
+
+        const ACCENT = '#d20d3b';
+        const MUTED  = '#555555';
+        const WIDTH  = doc.page.width - 100;
+
+        // ── Header ───────────────────────────────────────────────
+        doc.fontSize(22).font('Helvetica-Bold').fillColor('black')
+           .text(data.name, { align: 'center' });
+        doc.moveDown(0.3);
+
+        const contacts = [data.email, data.phone, data.linkedin, data.github]
+            .filter(Boolean).join('  |  ');
+        doc.fontSize(9).font('Helvetica').fillColor(MUTED)
+           .text(contacts, { align: 'center' });
+        doc.moveDown(0.8);
+
+        // ── Section helper ───────────────────────────────────────
+        function section(title) {
+            doc.moveDown(0.5);
+            doc.fontSize(11).font('Helvetica-Bold').fillColor(ACCENT).text(title.toUpperCase());
+            doc.moveDown(0.1);
+            doc.moveTo(50, doc.y).lineTo(50 + WIDTH, doc.y)
+               .strokeColor(ACCENT).lineWidth(0.5).stroke();
+            doc.moveDown(0.4);
+            doc.fillColor('black');
+        }
+
+        // ── Summary ──────────────────────────────────────────────
+        section('Professional Summary');
+        doc.fontSize(9.5).font('Helvetica')
+           .text(data.summary, { width: WIDTH, align: 'justify' });
+
+        // ── Skills ───────────────────────────────────────────────
+        section('Skills');
+        doc.fontSize(9.5).font('Helvetica')
+           .text(data.skills.join('  •  '), { width: WIDTH });
+
+        // ── Experience ───────────────────────────────────────────
+        if (data.experience?.length) {
+            section('Experience');
+            data.experience.forEach(exp => {
+                doc.fontSize(10).font('Helvetica-Bold').fillColor('black').text(exp.role);
+                doc.fontSize(9).font('Helvetica').fillColor(MUTED)
+                   .text(`${exp.company}  |  ${exp.duration}`);
+                doc.fillColor('black');
+                exp.achievements.forEach(a => {
+                    doc.fontSize(9.5).font('Helvetica')
+                       .text(`• ${a}`, { indent: 10, width: WIDTH - 10 });
+                });
+                doc.moveDown(0.5);
+            });
+        }
+
+        // ── Projects ─────────────────────────────────────────────
+        if (data.projects?.length) {
+            section('Projects');
+            data.projects.forEach(p => {
+                doc.fontSize(10).font('Helvetica-Bold').fillColor('black').text(p.name);
+                doc.fontSize(9).font('Helvetica').fillColor(MUTED).text(p.tech);
+                doc.fillColor('black').fontSize(9.5)
+                   .text(p.description, { indent: 10, width: WIDTH - 10 });
+                doc.moveDown(0.4);
+            });
+        }
+
+        // ── Education ────────────────────────────────────────────
+        if (data.education?.length) {
+            section('Education');
+            data.education.forEach(e => {
+                doc.fontSize(10).font('Helvetica-Bold').fillColor('black').text(e.degree);
+                doc.fontSize(9).font('Helvetica').fillColor(MUTED)
+                   .text(`${e.institution}  |  ${e.year}`);
+                doc.fillColor('black').moveDown(0.4);
+            });
+        }
+
+        // ── Certifications ───────────────────────────────────────
+        if (data.certifications?.length) {
+            section('Certifications');
+            data.certifications.forEach(c => {
+                doc.fontSize(9.5).font('Helvetica').fillColor('black')
+                   .text(`• ${c}`, { indent: 10 });
+            });
+        }
+
+        doc.end();
+    });
 }
 
 module.exports = { genrateInterviewReport, genrateResumePdf };
