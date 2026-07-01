@@ -117,13 +117,15 @@ Instructions:
 
 async function genratePdfFromHtml(htmlContent) {
     const browser = await puppeteer.launch({
-        headless: true,
-        args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage"
-        ]
-    });
+  headless: true,
+  channel: "chrome",
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+  ],
+});
+console.log("Chrome executable:", puppeteer.executablePath());
 
     const page = await browser.newPage();
 
