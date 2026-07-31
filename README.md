@@ -46,13 +46,14 @@ An AI-powered interview preparation platform that analyzes a candidate's resume 
 
 ### Home Page
 
-> Add screenshot here
+> 
 
 ---
 
 ### Interview Report
 
-> Add screenshot here
+> <img width="1410" height="903" alt="Interview" src="https://github.com/user-attachments/assets/13990fc3-58d8-4c2e-938f-50a007bba509" />
+
 
 ---
 
