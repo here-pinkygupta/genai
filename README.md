@@ -46,7 +46,8 @@ An AI-powered interview preparation platform that analyzes a candidate's resume 
 
 ### Home Page
 
-> 
+> <img width="1410" height="903" alt="Register" src="https://github.com/user-attachments/assets/488aee49-75c8-4ae9-aee7-08e89c0309cd" />
+
 
 ---
 
@@ -59,7 +60,7 @@ An AI-powered interview preparation platform that analyzes a candidate's resume 
 
 ### Preparation Roadmap
 
-> Add screenshot here
+>
 
 ---
 
