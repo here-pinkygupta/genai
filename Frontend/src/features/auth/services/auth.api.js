@@ -19,6 +19,7 @@ export async function register({username, email, password}){
 }
 
 export async function login({ email, password }) {
+     console.log("Sending login:", { email, password });
     try {
         const response = await api.post("/auth/login", {
             email,
@@ -26,10 +27,12 @@ export async function login({ email, password }) {
         });
 
         return response.data;
-    } catch (err) {
-        console.error(err.response?.data || err.message);
-        throw err;
-    }
+    } catch(err){
+    return {
+        success: false,
+        message: err.response?.data
+    };
+}
 }
 
 export async function logout(){
