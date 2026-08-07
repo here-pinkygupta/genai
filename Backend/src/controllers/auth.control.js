@@ -8,11 +8,20 @@ async function userRegisterController(req,res){
     try{
         console.log("REGISTER CONTROLLER HIT");
         const {username, password, email} = req.body
-
+console.log("register body:", req.body);
         if(!username || !email || !password){
             return res.status(400).json({message:"All fields are required , please provide"})
         }
 
+        const users = await userModel.find();
+
+console.log("All users in DB:");
+console.log(users);
+
+const use=  await userModel.findOne({ email });
+
+console.log("Searching:", email);
+console.log("Found:", use);
         const isalreadyUserExists = await userModel.findOne({
             $or: [{username}, {email}]
         })
@@ -35,7 +44,12 @@ async function userRegisterController(req,res){
             , {expiresIn: "1d"}
         )
 
-        res.cookie("token", token)
+        res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 24 * 60 * 60 * 1000
+});
 
         return res.status(201).json({
             message: "User Created Sucessfully!!",
@@ -45,6 +59,7 @@ async function userRegisterController(req,res){
                 email: user.email
             }
         })
+        
     }catch(err){
         console.log("Error occured at userRegisterController!", err)
     }
@@ -54,6 +69,10 @@ async function userRegisterController(req,res){
 async function userLoginController(req,res){
     try{
         const {email, password} = req.body
+console.log("Login body:", req.body);
+        if(!email || !password){
+            return res.status(400).json("Password and email is required")
+        }
 
         const user = await userModel.findOne({email})
 
@@ -62,9 +81,7 @@ async function userLoginController(req,res){
         }
 
 
-        if(!email || !password){
-            return res.status(400).json("Password and email is required")
-        }
+        
 
         const isPasswordValid = await bcrypt.compare(password, user.password)
 
@@ -78,12 +95,19 @@ async function userLoginController(req,res){
             {expiresIn: "1d"}
         )
 
-          res.cookie('token', token, {
-             httpOnly: true,
-             secure: true,        // REQUIRED on Codespaces (HTTPS)
-             sameSite: 'none',    // REQUIRED for cross-origin cookies
-             maxAge: 3600000
-            });
+         console.log("Generated JWT:", token);
+
+        // auth.controller.js — userLoginController
+res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,       // ← was false
+    sameSite: "none",   // ← was "lax"
+    maxAge: 24 * 60 * 60 * 1000
+});
+
+console.log("Cookie sent");
+console.log("Reached login controller");
+console.log("Generated token:", token);
 
         res.status(201).json({
             message: "LOgin succesfully!!",

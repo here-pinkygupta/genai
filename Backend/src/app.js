@@ -5,26 +5,31 @@ const app = express()
 
 
 const allowedOrigins = [
-    'https://resume-analyzer-puce-eight.vercel.app',  // ← your vercel URL
-    'http://localhost:5173',
-    'http://localhost:3000'
+    
+    'https://animated-winner-7vp7vv747vv42rj9r-3000.app.github.dev',
+    'https://animated-winner-7vp7vv747vv42rj9r-5173.app.github.dev'
 ];
-
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(cors({
-    origin: (origin, callback) => {
-        // allow requests with no origin (Postman, curl, server-to-server)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log("❌ CORS blocked:", origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true
+  origin: (origin, callback) => {
+    console.log("Incoming Origin:", origin);
+    console.log("Allowed:", allowedOrigins);
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("Blocked:", origin);
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
 }));
 
 // Handle OPTIONS preflight for ALL routes
-app.options('*', cors());
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

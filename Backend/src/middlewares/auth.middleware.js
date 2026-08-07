@@ -9,7 +9,8 @@ async function authUser(req,res,next){
             message: "Token is not proviede"
         })
     }
-
+console.log("Cookies:", req.cookies);
+console.log("Token:", req.cookies.token);
     const isTokenBlacklisted =await  blacklistTokensModel.findOne({token})
 
     if(isTokenBlacklisted){
