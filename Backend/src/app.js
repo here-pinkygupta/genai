@@ -5,7 +5,7 @@ const app = express()
 
 
 const allowedOrigins = [
-    
+    'https://genai-drab-beta.vercel.app',
     'https://animated-winner-7vp7vv747vv42rj9r-3000.app.github.dev',
     'https://animated-winner-7vp7vv747vv42rj9r-5173.app.github.dev'
 ];
